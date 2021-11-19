@@ -47,13 +47,15 @@ train_labels = np.array(train_labels)
 test_data = np.array(test_data)
 test_labels = np.array(test_labels)
 
-model = create_model(vocab_size=tokenizer.num_words, maxlen=maxlen, tokenizer=tokenizer)
-history = model.fit(train_data, train_labels, epochs=30, verbose=False)
+vocab_size = tokenizer.num_words
+
+model = create_model(vocab_size=vocab_size, maxlen=maxlen)
+history = model.fit(train_data, train_labels, epochs=60, verbose=False)
 loss, accuracy = model.evaluate(test_data, test_labels, verbose=False)
 print("Testing Accuracy:  {:.4f}".format(accuracy))
 
-if accuracy >= 0.6942:
-    model.save('G:/Python/text_classification/classification/text_model')
+if accuracy >= 0.6983:
+    model.save('G:/Python/text_classification/classification/text_model.h5')
     tokenizer_json = tokenizer.to_json()
     with io.open('tokenizer.json', 'w', encoding='utf-8') as f:
         f.write(json.dumps(tokenizer_json, ensure_ascii=False))
