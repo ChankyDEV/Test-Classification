@@ -1,14 +1,11 @@
-from keras.preprocessing.sequence import pad_sequences
-from keras.preprocessing.text import Tokenizer
-
-from processing.utils import get_max_sentence_length
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+from tensorflow.keras.preprocessing.text import Tokenizer
 
 
 def expand(tokenized_sentences, maxLength):
-    return pad_sequences(tokenized_sentences, padding='post', maxlen=maxLength)
+    return pad_sequences(tokenized_sentences, padding='post', maxlen=maxLength, dtype='float32')
 
 
-def tokenize(sentences):
-    tokenizer = Tokenizer(num_words=5000)
+def tokenize(sentences, tokenizer):
     tokenizer.fit_on_texts(sentences)
     return tokenizer.texts_to_sequences(sentences)

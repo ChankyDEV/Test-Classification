@@ -1,10 +1,9 @@
-from keras import utils
 from processing.tokenization import tokenize, expand
 from processing.utils import get_max_sentence_length
 
 
-def process_all(sentences, maxLength = 0):
-    tokenized_sentences = tokenize(sentences)
+def process_all(sentences, tokenizer, maxLength = 0):
+    tokenized_sentences = tokenize(sentences, tokenizer)
     expanded_sentences = expand(tokenized_sentences, maxLength= maxLength)
     return expanded_sentences
 

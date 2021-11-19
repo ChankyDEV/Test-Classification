@@ -1,13 +1,9 @@
-from keras.utils.np_utils import to_categorical
-import numpy as np
-from processing.utils import get_max_sentence_length
-from classification.model import create_model
+from tensorflow.keras.utils import to_categorical
 import processing.processing as processing
-from data.reader import read
 import random as r
 
-def process(sentences, maxlen):
-    proccessed_sentences = processing.process_all(sentences, maxlen)
+def process(sentences, maxlen, tokenizer):
+    proccessed_sentences = processing.process_all(sentences, tokenizer, maxlen)
     return proccessed_sentences
 
 def label(arr,label):
@@ -43,6 +39,8 @@ def random(min,max):
 
 
 def shuffle(arr):
+    r.shuffle(arr)
+    r.shuffle(arr)
     r.shuffle(arr)
     return arr
 
