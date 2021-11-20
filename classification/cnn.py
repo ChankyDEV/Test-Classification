@@ -1,61 +1,40 @@
+from tensorflow.python.keras.models import Sequential
 from tensorflow.python.keras.preprocessing.text import Tokenizer
 from cnn_utils import *
-from data.reader import read
+from data.reader import read, read_emotions_csv
 from processing.utils import get_max_sentence_length
 from model import create_model
-import numpy as np
-import io
-import json
 
-ACTUAL_BEST_ACCURACY = 1.0000
 
-sadness = read(path='G:\Python/text_classification/data/sadness_data.txt')
-joy = read(path='G:\Python/text_classification/data/other.txt')
+depressed_from_csv, non_depressed_from_csv = read_emotions_csv('G:\Python/text_classification/data/Emotion_final.csv')
+depressed_from_txt = read(path='G:\Python/text_classification/data/sadness_data.txt')
+non_depressed_from_txt = read(path='G:\Python/text_classification/data/other.txt')
 
-dataset = join(sadness,joy)
+depressed_together = [*depressed_from_txt, *depressed_from_csv]
+non_depressed_together = [*non_depressed_from_txt, *non_depressed_from_csv]
 
-sadness_length = get_max_sentence_length(sadness)
-joy_length = get_max_sentence_length(joy)
+x_train, y_train, x_test, y_test, x_val,y_val, vocab_size, maxlen, tokenizer, test_labels = prepare_data(depressed_together, non_depressed_together) 
 
-maxlen = get_max_length(sadness_length,joy_length)
 
-tokenizer = Tokenizer(num_words=5000)
+print('TRAIN SET:',len(x_train))
+print('TEST SET:',len(x_test))
+print('VAL SET:',len(x_val))
+print('WORDS COUNT:', vocab_size)
 
-sadness = process(sadness, maxlen, tokenizer)
-joy = process(joy, maxlen, tokenizer)
-
-sadness = label(sadness,label = 0)
-joy = label(joy,label = 1)
-
-sadness_train, sadness_test = split(sadness, 0.85)
-joy_train, joy_test = split(joy, 0.85)
-
-train = join(sadness_train,joy_train)
-test = join(sadness_test,joy_test)
-
-train = shuffle(train)
-test = shuffle(test)
-
-train_data, train_labels = get_data_and_labels(train)
-test_data, test_labels = get_data_and_labels(test)
-
-train_labels, test_labels = expand_labels(train_labels, test_labels)
-
-train_data = np.array(train_data)
-train_labels = np.array(train_labels)
-
-test_data = np.array(test_data)
-test_labels = np.array(test_labels)
-
-vocab_size = tokenizer.num_words
-
-model = create_model(vocab_size=vocab_size, maxlen=maxlen)
-history = model.fit(train_data, train_labels, epochs=60, verbose=False)
-loss, accuracy = model.evaluate(test_data, test_labels, verbose=False)
-print("Testing Accuracy:  {:.4f}".format(accuracy))
-
-if accuracy >= 0.6983:
-    model.save('G:/Python/text_classification/classification/text_model.h5')
-    tokenizer_json = tokenizer.to_json()
-    with io.open('tokenizer.json', 'w', encoding='utf-8') as f:
-        f.write(json.dumps(tokenizer_json, ensure_ascii=False))
+# 0.7479
+actualMax = 0.8683
+model = create_model(vocab_size=vocab_size, maxlen = maxlen)
+acc, model_to_save = learn_model(model=model,
+                                 train=(x_train,y_train),              
+                                 test=(x_test,y_test),
+                                 val=(x_val,y_val),
+                                 epochs = 11, 
+                                 test_labels=test_labels
+                                 )
+if acc > actualMax:
+    actualMax = acc
+    save(model_to_save, tokenizer)
+    print("New best accuracy:  {:.4f}".format(actualMax))
+      
+    
+    

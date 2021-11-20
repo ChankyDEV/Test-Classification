@@ -1,6 +1,16 @@
 from tensorflow.keras.utils import to_categorical
 import processing.processing as processing
 import random as r
+import io
+import json
+import matplotlib.pyplot as plt
+from tensorflow.python.keras.models import Sequential
+from tensorflow.python.keras.preprocessing.text import Tokenizer
+from processing.utils import get_max_sentence_length
+import numpy as np
+from sklearn.metrics import confusion_matrix, plot_confusion_matrix, ConfusionMatrixDisplay
+import tensorflow as tf
+
 
 def process(sentences, maxlen, tokenizer):
     proccessed_sentences = processing.process_all(sentences, tokenizer, maxlen)
@@ -40,8 +50,6 @@ def random(min,max):
 
 def shuffle(arr):
     r.shuffle(arr)
-    r.shuffle(arr)
-    r.shuffle(arr)
     return arr
 
 def get_data_and_labels(tuples):
@@ -56,3 +64,113 @@ def expand_labels(first_arr, second_arr):
     first_arr = to_categorical(first_arr, num_classes=2)
     second_arr = to_categorical(second_arr, num_classes=2)
     return first_arr, second_arr
+
+def save(model: Sequential, tokenizer_to_save: Tokenizer):
+    print('SAVING...')
+    model.save('G:/Python/text_classification/classification/new_classification_model.h5')
+    tokenizer_json = tokenizer_to_save.to_json()
+    with io.open('tokenizer.json', 'w', encoding='utf-8') as f:
+        f.write(json.dumps(tokenizer_json, ensure_ascii=False))
+
+
+def learn_model(model:Sequential,train:tuple,test:tuple,val:tuple,epochs, test_labels):
+    history = model.fit(train[0], 
+                        train[1], 
+                        epochs=epochs, 
+                        verbose=False, 
+                        validation_data=val
+                        )
+    loss, accuracy = model.evaluate(test[0], 
+                                test[1], 
+                                verbose=False
+                                    )
+    
+    
+    preds = model.predict(test[0])
+    predictions = []
+    for pred in preds:
+        if pred[0] > pred[1]:
+            predictions.append(0)
+        else:
+            predictions.append(1)
+    classes = ['depression', 'non-depression']
+
+    plt.figure(1)
+    ConfusionMatrixDisplay.from_predictions(test_labels, predictions,
+                                            cmap=plt.cm.Blues)
+    plt.show()
+    
+    print("Actual accuracy:  {:.4f}".format(accuracy))
+    # summarize history for accuracy
+    plt.figure(2)
+    plt.plot(history.history['accuracy'])
+    plt.plot(history.history['val_accuracy'])
+    plt.title('model accuracy')
+    plt.ylabel('accuracy')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'val'], loc='upper left')
+
+    
+    # summarize history for loss
+    plt.figure(3)
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
+    plt.title('model loss')
+    plt.ylabel('loss')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'val'], loc='upper left')
+    plt.show()
+    return accuracy, model
+
+
+def prepare_data(depressed_together, non_depressed_together):
+    depressed_together_length = get_max_sentence_length(depressed_together)
+    non_depressed_together_length = get_max_sentence_length(non_depressed_together)
+
+    maxlen = get_max_length(depressed_together_length,non_depressed_together_length)
+
+    tokenizer = Tokenizer(num_words=30000)
+
+    depressed = process(depressed_together, maxlen, tokenizer)
+    non_depressed = process(non_depressed_together, maxlen, tokenizer)
+
+    depressed = label(depressed,label = 0)
+    non_depressed = label(non_depressed,label = 1)
+
+    depressed = shuffle(depressed)
+    non_depressed = shuffle(non_depressed)
+
+    depressed_train, depressed_test = split(depressed, 0.8)
+    non_depressed_train, non_depressed_test = split(non_depressed, 0.8)
+
+    train = join(depressed_train,non_depressed_train)
+    test = join(depressed_test,non_depressed_test)
+
+    train = shuffle(train)
+    test = shuffle(test)
+
+    x_train, y_train = get_data_and_labels(train)
+    x_test, y_test = get_data_and_labels(test)
+    
+    test_labels = y_test.copy()
+
+    y_train, y_test = expand_labels(y_train, y_test)
+
+    size_of_val_set = 1700
+
+    x_val =   x_train[0:size_of_val_set]
+    y_val = y_train[0:size_of_val_set]
+
+    x_train =  x_train[size_of_val_set:]
+    y_train = y_train[size_of_val_set:]
+
+    x_test = np.array(x_test)
+    y_test = np.array(y_test)
+
+    x_train = np.array(x_train)
+    y_train = np.array(y_train)
+
+    x_val = np.array(x_val)
+    y_val = np.array(y_val)
+    
+    return x_train, y_train, x_test, y_test, x_val,y_val, len(tokenizer.word_docs), maxlen, tokenizer, test_labels
