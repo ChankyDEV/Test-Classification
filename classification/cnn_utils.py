@@ -8,7 +8,7 @@ from tensorflow.python.keras.models import Sequential
 from tensorflow.python.keras.preprocessing.text import Tokenizer
 from processing.utils import get_max_sentence_length
 import numpy as np
-from sklearn.metrics import confusion_matrix, plot_confusion_matrix, ConfusionMatrixDisplay
+from sklearn.metrics import ConfusionMatrixDisplay
 import tensorflow as tf
 
 
@@ -93,11 +93,12 @@ def learn_model(model:Sequential,train:tuple,test:tuple,val:tuple,epochs, test_l
             predictions.append(0)
         else:
             predictions.append(1)
-    classes = ['depression', 'non-depression']
+    classes = ['Charakter nie depresyjny', 'Charakter depresyjny']
 
     plt.figure(1)
     ConfusionMatrixDisplay.from_predictions(test_labels, predictions,
-                                            cmap=plt.cm.Blues)
+                                            cmap=plt.cm.Blues, 
+                                            display_labels=classes)
     plt.show()
     
     print("Actual accuracy:  {:.4f}".format(accuracy))
@@ -134,8 +135,8 @@ def prepare_data(depressed_together, non_depressed_together):
     depressed = process(depressed_together, maxlen, tokenizer)
     non_depressed = process(non_depressed_together, maxlen, tokenizer)
 
-    depressed = label(depressed,label = 0)
-    non_depressed = label(non_depressed,label = 1)
+    depressed = label(depressed, label = 1)
+    non_depressed = label(non_depressed, label = 0)
 
     depressed = shuffle(depressed)
     non_depressed = shuffle(non_depressed)
