@@ -16,54 +16,17 @@ def process(sentences, maxlen, tokenizer):
     proccessed_sentences = processing.process_all(sentences, tokenizer, maxlen)
     return proccessed_sentences
 
-def label(arr,label):
-    tuples = []
-    for sentence in arr:
-        tuples.append((sentence,label))
-    return tuples
 
-def join(firstArr,secondArr):
-    return [*firstArr, *secondArr]
-
-def get_max_length(x,y):
+def get_grater(x,y):
     if x > y:
         return x
     else:
-        return y
-
-def split(arr, percentage):
-    arr_length = len(arr)-1
-    train_set_length = int(len(arr)*percentage)
-    train = []
-    test = []
-    for i in range(train_set_length):
-        random_index = random(0,arr_length)
-        train.append(arr[random_index])
-        del arr[random_index]
-        arr_length = len(arr)-1
-    test = arr
-    return train,test    
+        return y 
 
 def random(min,max):
     return r.randint(min,max)
 
 
-def shuffle(arr):
-    r.shuffle(arr)
-    return arr
-
-def get_data_and_labels(tuples):
-    data = []
-    labels = []
-    for tuple in tuples:
-        data.append(tuple[0])
-        labels.append(tuple[1])
-    return data, labels
-
-def expand_labels(first_arr, second_arr):
-    first_arr = to_categorical(first_arr, num_classes=2)
-    second_arr = to_categorical(second_arr, num_classes=2)
-    return first_arr, second_arr
 
 def save(model: Sequential, tokenizer_to_save: Tokenizer):
     print('SAVING...')
@@ -123,61 +86,3 @@ def plot(test_labels, predictions, displayed_labels, model_history):
     plt.xlabel('epoch')
     plt.legend(['train', 'val'], loc='upper left')
     plt.show()
-
-
-
-def prepare_data(depressed_together, non_depressed_together):
-    depressed_together_length = get_max_sentence_length(depressed_together)
-    non_depressed_together_length = get_max_sentence_length(non_depressed_together)
-
-    maxlen = get_max_length(depressed_together_length,non_depressed_together_length)
-
-    tokenizer = Tokenizer(num_words=30000)
-
-    depressed = process(depressed_together, maxlen, tokenizer)
-    non_depressed = process(non_depressed_together, maxlen, tokenizer)
-
-    depressed = label(depressed, label = 1)
-    non_depressed = label(non_depressed, label = 0)
-
-    depressed = shuffle(depressed)
-    non_depressed = shuffle(non_depressed)
-
-    depressed_train, depressed_test = split(depressed, 0.8)
-    non_depressed_train, non_depressed_test = split(non_depressed, 0.8)
-
-    train = join(depressed_train,non_depressed_train)
-    test = join(depressed_test,non_depressed_test)
-
-    train = shuffle(train)
-    test = shuffle(test)
-
-    x_train, y_train = get_data_and_labels(train)
-    x_test, y_test = get_data_and_labels(test)
-    
-    test_labels = y_test.copy()
-
-    y_train, y_test = expand_labels(y_train, y_test)
-
-    size_of_val_set = 1700
-
-    x_val =   x_train[0:size_of_val_set]
-    y_val = y_train[0:size_of_val_set]
-
-    x_train =  x_train[size_of_val_set:]
-    y_train = y_train[size_of_val_set:]
-
-    x_test = np.array(x_test)
-    y_test = np.array(y_test)
-
-    x_train = np.array(x_train)
-    y_train = np.array(y_train)
-
-    x_val = np.array(x_val)
-    y_val = np.array(y_val)
-    
-    print('TRAIN SET:',len(x_train))
-    print('TEST SET:',len(x_test))
-    print('VAL SET:',len(x_val))
-    
-    return x_train, y_train, x_test, y_test, x_val,y_val, len(tokenizer.word_docs), maxlen, tokenizer, test_labels
