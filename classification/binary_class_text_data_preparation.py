@@ -6,7 +6,7 @@ import numpy as np
 from classification.dataset import Dataset
 
 
-class BinaryClassTextDataPrepration:
+class BinaryClassTextDataPreparation:
     
     def __get_max_length(self, first_arr, second_arr):
         first_arr_length = get_max_sentence_length(first_arr)
@@ -31,9 +31,9 @@ class BinaryClassTextDataPrepration:
     def __split_into_val_set(self, size, x_train, y_train):
         x_val =   x_train[0:size]
         y_val = y_train[0:size]
-        x_train =  x_train[size:]
-        y_train = y_train[size:]
-        return x_val, y_val, x_train, y_train
+        new_x_train =  x_train[size::]
+        new_y_train = y_train[size::]
+        return x_val, y_val, new_x_train, new_y_train
     
     
     def __split(self, arr, percent):

@@ -8,3 +8,10 @@ class Dataset:
         self.x_val = x_val
         self.y_val = y_val
         self.y_test_not_categorical = y_test_not_categorical
+        
+        
+    def __str__(self) -> str:
+        dataset = f'''x_train={len(self.x_train)}
+        x_test={len(self.x_test)}
+        x_val={len(self.x_val)}'''
+        return dataset
